@@ -1,6 +1,20 @@
 import hashlib
 import datetime as date
 
+# construtor para criar um agente
+class Agent:
+    def __init__(self, name):
+        self.name = name
+
+    def create_block(self, blockchain, data):
+        index = len(blockchain.chain)
+        timestamp = date.datetime.now()
+        previous_hash = blockchain.chain[-1].hash
+        new_block = Block(index, timestamp, data, previous_hash)
+        blockchain.add_block(new_block, self)
+
+    def validate_block(self, blockchain, block):
+        return blockchain.is_valid()
 
 # construtor para criar um bloco
 class Block:
@@ -29,11 +43,15 @@ class Blockchain:
     def create_genesis_block(self):
         return Block(0, date.datetime.now(), 'Genesis Block', '0')
     
-    def add_block(self, new_block):
-        new_block.previous_hash = self.chain[-1].hash  # atribui o hash do bloco anterior
-        new_block.hash = new_block.calculate_hash()  # calcula o hash do novo bloco
-        self.chain.append(new_block)  # adiciona o bloco à cadeia
-        
+    def add_block(self, new_block, agent):
+        if self.is_valid():
+            new_block.previous_hash = self.chain[-1].hash  # atribui o hash do bloco anterior
+            new_block.hash = new_block.calculate_hash()  # calcula o hash do novo bloco
+            self.chain.append(new_block)  # adiciona o bloco à cadeia
+            print(f"Block added by {agent.name}")
+        else:
+            print(f"Failed to add block by {agent.name}")
+            
     def is_valid(self):
         for i in range(1, len(self.chain)):
             current_block = self.chain[i]
@@ -48,14 +66,18 @@ class Blockchain:
         
         return True  # retorna True se todos os blocos forem válidos
 
-# criação de uma nova blockchain
+# Criação da blockchain
 blockchain = Blockchain()
 
-# adicionando blocos a blockchain
-blockchain.add_block(Block(1, date.datetime.now(), 'Segundo bloco', blockchain.chain[-1].hash))
-blockchain.add_block(Block(2, date.datetime.now(), 'Terceiro bloco', blockchain.chain[-1].hash))
+# Criação dos agentes
+agent1 = Agent("Alice")
+agent2 = Agent("Bob")
 
-# exibindo os blocos da blockchain
+# Agentes adicionam blocos
+agent1.create_block(blockchain, 'Segundo bloco')
+agent2.create_block(blockchain, 'Terceiro bloco')
+
+# Exibindo os blocos da blockchain
 for block in blockchain.chain:
     print(f'Índice: {block.index}')
     print(f'Timestamp: {block.timestamp}')
@@ -64,5 +86,6 @@ for block in blockchain.chain:
     print(f'Hash Anterior: {block.previous_hash}')
     print('---')
 
-# verificando se a blockchain e valida
+# Verificando se a blockchain é válida
 print(f'Blockchain é válida? {blockchain.is_valid()}')
+
